@@ -34,7 +34,12 @@ const Auth = () => {
           .eq("user_id", session.user.id)
           .single();
         
-        if (roleData?.role === "admin") {
+        // Check for pending package first
+        const pendingPackage = localStorage.getItem("pendingPackage");
+        if (pendingPackage && roleData?.role !== "admin") {
+          localStorage.removeItem("pendingPackage");
+          navigate(`/checkout?package=${pendingPackage}`);
+        } else if (roleData?.role === "admin") {
           navigate("/admin");
         } else {
           navigate("/dashboard");
@@ -75,7 +80,15 @@ const Auth = () => {
         });
         
         if (signInError) throw signInError;
-        navigate("/dashboard");
+        
+        // Check for pending package
+        const pendingPackage = localStorage.getItem("pendingPackage");
+        if (pendingPackage) {
+          localStorage.removeItem("pendingPackage");
+          navigate(`/checkout?package=${pendingPackage}`);
+        } else {
+          navigate("/dashboard");
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -95,7 +108,14 @@ const Auth = () => {
           if (roleData?.role === "admin") {
             navigate("/admin");
           } else {
-            navigate("/dashboard");
+            // Check for pending package
+            const pendingPackage = localStorage.getItem("pendingPackage");
+            if (pendingPackage) {
+              localStorage.removeItem("pendingPackage");
+              navigate(`/checkout?package=${pendingPackage}`);
+            } else {
+              navigate("/dashboard");
+            }
           }
         }
       }

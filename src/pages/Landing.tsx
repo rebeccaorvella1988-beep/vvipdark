@@ -1,11 +1,37 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { TrendingUp, Zap, Shield, Users } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
 
 const Landing = () => {
+  const navigate = useNavigate();
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handlePackageClick = (packageId: string) => {
+    if (session) {
+      navigate(`/checkout?package=${packageId}`);
+    } else {
+      // Save package ID to redirect after login
+      localStorage.setItem("pendingPackage", packageId);
+      navigate("/auth?mode=signup");
+    }
+  };
+
   const { data: categories } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
@@ -171,11 +197,12 @@ const Landing = () => {
                     ))}
                   </ul>
                 )}
-                <Link to="/auth?mode=signup">
-                  <Button className="w-full bg-gradient-to-r from-primary to-primary-glow hover:opacity-90">
-                    Get Started
-                  </Button>
-                </Link>
+                <Button 
+                  className="w-full bg-gradient-to-r from-primary to-primary-glow hover:opacity-90"
+                  onClick={() => handlePackageClick(pkg.id)}
+                >
+                  Get Package
+                </Button>
               </Card>
             ))}
           </div>

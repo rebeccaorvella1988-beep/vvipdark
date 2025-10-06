@@ -79,6 +79,19 @@ const Dashboard = () => {
     enabled: !!session?.user?.id,
   });
 
+  const { data: availablePackages } = useQuery({
+    queryKey: ["available_packages"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("packages")
+        .select("*, categories(*)")
+        .eq("is_active", true)
+        .order("price", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     toast.success("Signed out successfully");
@@ -125,8 +138,9 @@ const Dashboard = () => {
         </div>
 
         <Tabs defaultValue="subscriptions" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-3 lg:w-auto">
             <TabsTrigger value="subscriptions">Active Subscriptions</TabsTrigger>
+            <TabsTrigger value="packages">Browse Packages</TabsTrigger>
             <TabsTrigger value="orders">Order History</TabsTrigger>
           </TabsList>
 
@@ -187,6 +201,45 @@ const Dashboard = () => {
                 </Button>
               </Card>
             )}
+          </TabsContent>
+
+          <TabsContent value="packages" className="space-y-4">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {availablePackages?.map((pkg) => (
+                <Card
+                  key={pkg.id}
+                  className="p-6 border-primary/20 hover:border-primary/40 hover:shadow-glow transition-all flex flex-col"
+                >
+                  <div className="mb-4">
+                    <span className="text-sm text-primary px-3 py-1 rounded-full border border-primary/30 bg-primary/10">
+                      {pkg.categories?.name}
+                    </span>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-2">{pkg.name}</h3>
+                  <p className="text-muted-foreground mb-4">{pkg.description}</p>
+                  <div className="mb-6">
+                    <span className="text-4xl font-bold text-primary">${pkg.price}</span>
+                    <span className="text-muted-foreground">/{pkg.duration_days} days</span>
+                  </div>
+                  {pkg.features && Array.isArray(pkg.features) && pkg.features.length > 0 && (
+                    <ul className="space-y-2 mb-6 flex-grow">
+                      {pkg.features.map((feature: string, index: number) => (
+                        <li key={index} className="flex items-center gap-2 text-sm">
+                          <div className="h-1.5 w-1.5 rounded-full bg-accent" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <Button
+                    className="w-full bg-gradient-to-r from-primary to-primary-glow hover:opacity-90"
+                    onClick={() => navigate(`/checkout?package=${pkg.id}`)}
+                  >
+                    Get Package
+                  </Button>
+                </Card>
+              ))}
+            </div>
           </TabsContent>
 
           <TabsContent value="orders" className="space-y-4">
