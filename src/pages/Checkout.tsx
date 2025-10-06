@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
-import { Copy, Check, Clock } from "lucide-react";
+import { Copy, Check, Clock, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import QRCode from "qrcode";
 
@@ -17,7 +17,7 @@ const Checkout = () => {
   const [selectedCrypto, setSelectedCrypto] = useState("");
   const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [transactionHash, setTransactionHash] = useState("");
-  const [countdown, setCountdown] = useState(1800); // 30 minutes
+  const [countdown, setCountdown] = useState(900); // 15 minutes
   const [copied, setCopied] = useState(false);
   const [session, setSession] = useState<any>(null);
 
@@ -228,6 +228,15 @@ const Checkout = () => {
                   disabled={!transactionHash.trim()}
                 >
                   I Have Paid
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => packageData.telegram_link && window.open(packageData.telegram_link, "_blank")}
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Telegram Support
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground">
