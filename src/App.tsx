@@ -10,6 +10,12 @@ import Checkout from "./pages/Checkout";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOrders from "./pages/admin/AdminOrders";
+import AdminCategories from "./pages/admin/AdminCategories";
+import AdminPackages from "./pages/admin/AdminPackages";
+import AdminWallets from "./pages/admin/AdminWallets";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminTelegram from "./pages/admin/AdminTelegram";
+import AdminSettings from "./pages/admin/AdminSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,10 +30,16 @@ const App = () => (
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/checkout/:packageId" element={<Checkout />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="orders" element={<AdminOrders />} />
+            <Route path="categories" element={<AdminCategories />} />
+            <Route path="packages" element={<AdminPackages />} />
+            <Route path="wallets" element={<AdminWallets />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="telegram" element={<AdminTelegram />} />
+            <Route path="settings" element={<AdminSettings />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

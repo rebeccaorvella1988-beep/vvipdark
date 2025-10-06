@@ -88,16 +88,23 @@ const Checkout = () => {
     }
 
     try {
-      const { error } = await supabase.from("orders").insert({
+      const { data: orderData, error } = await supabase.from("orders").insert({
         user_id: session.user.id,
         package_id: packageId,
         amount: packageData.price,
         crypto_type: selectedCrypto,
         transaction_hash: transactionHash,
         status: "pending",
-      });
+      }).select().single();
 
       if (error) throw error;
+
+      // Send Telegram notification to admin
+      if (orderData) {
+        supabase.functions.invoke("send-telegram-notification", {
+          body: { orderId: orderData.id, type: "new_order" },
+        }).catch(console.error);
+      }
 
       toast.success("Payment submitted! Waiting for admin confirmation.");
       navigate("/dashboard");

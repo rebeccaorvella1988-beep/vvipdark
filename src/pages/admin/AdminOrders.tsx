@@ -82,6 +82,11 @@ const AdminOrders = () => {
         });
         if (subError) throw subError;
       }
+
+      // Send Telegram notification
+      supabase.functions.invoke("send-telegram-notification", {
+        body: { orderId, type: "order_released" },
+      }).catch(console.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin_orders"] });
