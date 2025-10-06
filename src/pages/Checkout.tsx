@@ -52,6 +52,18 @@ const Checkout = () => {
     enabled: !!packageId,
   });
 
+  const { data: siteSettings } = useQuery({
+    queryKey: ["site_settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("*")
+        .single();
+      if (error && error.code !== "PGRST116") throw error;
+      return data;
+    },
+  });
+
   const { data: cryptoWallets } = useQuery({
     queryKey: ["crypto_wallets"],
     queryFn: async () => {
@@ -233,7 +245,11 @@ const Checkout = () => {
                 <Button
                   variant="outline"
                   className="w-full"
-                  onClick={() => packageData.telegram_link && window.open(packageData.telegram_link, "_blank")}
+                  onClick={() => {
+                    const telegramLink = packageData?.telegram_link || siteSettings?.telegram_link;
+                    if (telegramLink) window.open(telegramLink, "_blank");
+                  }}
+                  disabled={!packageData?.telegram_link && !siteSettings?.telegram_link}
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Telegram Support

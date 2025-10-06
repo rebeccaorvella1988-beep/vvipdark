@@ -107,7 +107,10 @@ const AdminSettings = () => {
           </div>
 
           <div className="pt-4 border-t border-border">
-            <h3 className="font-semibold mb-4">Contact Information</h3>
+            <h3 className="font-semibold mb-4">Support & Contact</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              The Telegram link will be used as support button on checkout page
+            </p>
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium">Support Email</label>

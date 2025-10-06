@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { Package, ShoppingBag, Clock, ExternalLink } from "lucide-react";
@@ -92,6 +93,19 @@ const Dashboard = () => {
     },
   });
 
+  const { data: digitalProducts } = useQuery({
+    queryKey: ["digital_products"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("digital_products")
+        .select("*")
+        .eq("is_active", true)
+        .order("price", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     toast.success("Signed out successfully");
@@ -138,9 +152,10 @@ const Dashboard = () => {
         </div>
 
         <Tabs defaultValue="subscriptions" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-4 lg:w-auto">
             <TabsTrigger value="subscriptions">Active Subscriptions</TabsTrigger>
             <TabsTrigger value="packages">Browse Packages</TabsTrigger>
+            <TabsTrigger value="products">Digital Products</TabsTrigger>
             <TabsTrigger value="orders">Order History</TabsTrigger>
           </TabsList>
 
@@ -204,81 +219,107 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="packages" className="space-y-4">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {availablePackages?.map((pkg) => (
-                <Card
-                  key={pkg.id}
-                  className="p-6 border-primary/20 hover:border-primary/40 hover:shadow-glow transition-all flex flex-col"
-                >
-                  <div className="mb-4">
-                    <span className="text-sm text-primary px-3 py-1 rounded-full border border-primary/30 bg-primary/10">
-                      {pkg.categories?.name}
-                    </span>
-                  </div>
-                  <h3 className="text-2xl font-bold mb-2">{pkg.name}</h3>
-                  <p className="text-muted-foreground mb-4">{pkg.description}</p>
-                  <div className="mb-6">
-                    <span className="text-4xl font-bold text-primary">${pkg.price}</span>
-                    <span className="text-muted-foreground">/{pkg.duration_days} days</span>
-                  </div>
-                  {pkg.features && Array.isArray(pkg.features) && pkg.features.length > 0 && (
-                    <ul className="space-y-2 mb-6 flex-grow">
-                      {pkg.features.map((feature: string, index: number) => (
-                        <li key={index} className="flex items-center gap-2 text-sm">
-                          <div className="h-1.5 w-1.5 rounded-full bg-accent" />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  <Button
-                    className="w-full bg-gradient-to-r from-primary to-primary-glow hover:opacity-90"
-                    onClick={() => navigate(`/checkout?package=${pkg.id}`)}
-                  >
-                    Get Package
-                  </Button>
-                </Card>
-              ))}
-            </div>
+            {availablePackages && availablePackages.length > 0 ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {availablePackages.map((pkg) => (
+                  <Card key={pkg.id} className="border-primary/20">
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        {pkg.name}
+                        <Badge variant="outline">${pkg.price}</Badge>
+                      </CardTitle>
+                      <CardDescription>{pkg.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {pkg.features && Array.isArray(pkg.features) && (
+                        <ul className="space-y-2 text-sm">
+                          {pkg.features.map((feature: string, idx: number) => (
+                            <li key={idx} className="flex items-start gap-2">
+                              <span className="text-primary">•</span>
+                              <span>{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <Button
+                        className="w-full"
+                        onClick={() => navigate(`/checkout?package=${pkg.id}`)}
+                      >
+                        Purchase Now
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="border-primary/20">
+                <CardContent className="flex flex-col items-center justify-center py-8">
+                  <p className="text-muted-foreground">No packages available</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="products" className="space-y-4">
+            {digitalProducts && digitalProducts.length > 0 ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {digitalProducts.map((product) => (
+                  <Card key={product.id} className="border-primary/20">
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        {product.name}
+                        <Badge variant="outline">${product.price}</Badge>
+                      </CardTitle>
+                      <CardDescription>{product.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button
+                        className="w-full"
+                        onClick={() => navigate(`/checkout?product=${product.id}`)}
+                      >
+                        Purchase Now
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="border-primary/20">
+                <CardContent className="flex flex-col items-center justify-center py-8">
+                  <p className="text-muted-foreground">No digital products available</p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="orders" className="space-y-4">
             {orders && orders.length > 0 ? (
-              <div className="space-y-4">
+              <div className="grid gap-4">
                 {orders.map((order) => (
                   <Card key={order.id} className="p-6 border-primary/20">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <ShoppingBag className="h-5 w-5 text-primary" />
-                          <h3 className="font-semibold">
-                            {order.packages?.name || order.digital_products?.name}
-                          </h3>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Amount: ${order.amount} ({order.crypto_type})
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-bold">
+                          {order.packages?.name || order.digital_products?.name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(order.created_at).toLocaleDateString()}
                         </p>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Clock className="h-4 w-4" />
-                          <span className="text-muted-foreground">
-                            {new Date(order.created_at).toLocaleString()}
-                          </span>
-                        </div>
-                        {order.release_message && (
-                          <div className="mt-3 p-3 bg-accent/10 border border-accent/20 rounded-lg">
-                            <p className="text-sm text-accent-foreground">{order.release_message}</p>
-                          </div>
-                        )}
                       </div>
                       <div className="text-right">
-                        <span
-                          className={`text-sm font-medium uppercase ${getStatusColor(
-                            order.status
-                          )}`}
-                        >
+                        <p className="font-semibold">${order.amount}</p>
+                        <p className={`text-sm capitalize ${getStatusColor(order.status)}`}>
                           {order.status}
-                        </span>
+                        </p>
                       </div>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                      <p><span className="text-muted-foreground">Crypto:</span> {order.crypto_type}</p>
+                      {order.transaction_hash && (
+                        <p className="font-mono text-xs break-all">
+                          <span className="text-muted-foreground">TX:</span> {order.transaction_hash}
+                        </p>
+                      )}
                     </div>
                   </Card>
                 ))}
@@ -287,9 +328,7 @@ const Dashboard = () => {
               <Card className="p-12 text-center border-dashed">
                 <ShoppingBag className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-2">No Orders Yet</h3>
-                <p className="text-muted-foreground">
-                  Your order history will appear here
-                </p>
+                <p className="text-muted-foreground">Your order history will appear here</p>
               </Card>
             )}
           </TabsContent>
