@@ -320,6 +320,23 @@ const Dashboard = () => {
                           <span className="text-muted-foreground">TX:</span> {order.transaction_hash}
                         </p>
                       )}
+                      {order.status === "released" && order.release_message && (
+                        <div className="mt-4 p-4 bg-primary/10 border border-primary/20 rounded-lg">
+                          <p className="text-sm font-semibold text-primary mb-1">Release Message:</p>
+                          <p className="text-sm">{order.release_message}</p>
+                        </div>
+                      )}
+                      {order.status === "released" && order.digital_products?.file_url && (
+                        <div className="mt-2">
+                          <Button
+                            variant="outline"
+                            className="w-full mt-2"
+                            onClick={() => window.open(order.digital_products.file_url, "_blank")}
+                          >
+                            Download Digital Product
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </Card>
                 ))}
