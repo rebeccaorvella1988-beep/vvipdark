@@ -13,6 +13,7 @@ import QRCode from "qrcode";
 const Checkout = () => {
   const [searchParams] = useSearchParams();
   const packageId = searchParams.get("package");
+  const productId = searchParams.get("product");
   const navigate = useNavigate();
   const [selectedCrypto, setSelectedCrypto] = useState("");
   const [qrCodeUrl, setQrCodeUrl] = useState("");
@@ -51,6 +52,23 @@ const Checkout = () => {
     },
     enabled: !!packageId,
   });
+
+  const { data: productData } = useQuery({
+    queryKey: ["product", productId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("digital_products")
+        .select("*")
+        .eq("id", productId)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!productId,
+  });
+
+  const itemData = packageData || productData;
+  const itemType = packageId ? "package" : "product";
 
   const { data: siteSettings } = useQuery({
     queryKey: ["site_settings"],
@@ -100,14 +118,25 @@ const Checkout = () => {
     }
 
     try {
-      const { data: orderData, error } = await supabase.from("orders").insert({
+      const orderPayload: any = {
         user_id: session.user.id,
-        package_id: packageId,
-        amount: packageData.price,
+        amount: itemData.price,
         crypto_type: selectedCrypto,
         transaction_hash: transactionHash,
         status: "pending",
-      }).select().single();
+      };
+
+      if (itemType === "package") {
+        orderPayload.package_id = packageId;
+      } else {
+        orderPayload.digital_product_id = productId;
+      }
+
+      const { data: orderData, error } = await supabase
+        .from("orders")
+        .insert(orderPayload)
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -131,7 +160,7 @@ const Checkout = () => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  if (!packageData) return null;
+  if (!itemData) return null;
 
   return (
     <div className="min-h-screen bg-background py-12 px-4">
@@ -145,20 +174,30 @@ const Checkout = () => {
             <h2 className="text-2xl font-bold mb-4">Order Summary</h2>
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-muted-foreground">Package</p>
-                <p className="font-semibold">{packageData.name}</p>
+                <p className="text-sm text-muted-foreground">{itemType === "package" ? "Package" : "Product"}</p>
+                <p className="font-semibold">{itemData.name}</p>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Category</p>
-                <p className="font-semibold">{packageData.categories?.name}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Duration</p>
-                <p className="font-semibold">{packageData.duration_days} days</p>
-              </div>
+              {packageData && (
+                <>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Category</p>
+                    <p className="font-semibold">{packageData.categories?.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Duration</p>
+                    <p className="font-semibold">{packageData.duration_days} days</p>
+                  </div>
+                </>
+              )}
+              {productData && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Description</p>
+                  <p className="font-semibold text-sm">{productData.description}</p>
+                </div>
+              )}
               <div className="pt-4 border-t border-border">
                 <p className="text-sm text-muted-foreground">Total Amount</p>
-                <p className="text-3xl font-bold text-primary">${packageData.price}</p>
+                <p className="text-3xl font-bold text-primary">${itemData.price}</p>
               </div>
             </div>
           </Card>
@@ -246,7 +285,7 @@ const Checkout = () => {
                   variant="outline"
                   className="w-full"
                   onClick={() => {
-                    const telegramLink = packageData?.telegram_link || siteSettings?.telegram_link;
+                    const telegramLink = (packageData?.telegram_link || siteSettings?.telegram_link);
                     if (telegramLink) window.open(telegramLink, "_blank");
                   }}
                   disabled={!packageData?.telegram_link && !siteSettings?.telegram_link}
