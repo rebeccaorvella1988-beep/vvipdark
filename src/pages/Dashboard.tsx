@@ -128,40 +128,48 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <nav className="border-b border-border bg-card/50 backdrop-blur-lg">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
+          <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
             TradePro
           </h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <span className="text-xs sm:text-sm text-muted-foreground hidden sm:inline">
               {profile?.full_name || profile?.email}
             </span>
-            <Button variant="outline" onClick={handleSignOut}>
+            <Button variant="outline" size="sm" onClick={handleSignOut}>
               Sign Out
             </Button>
           </div>
         </div>
       </nav>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">Welcome Back!</h2>
-          <p className="text-muted-foreground">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-2">Welcome Back!</h2>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Manage your subscriptions and access your premium content
           </p>
         </div>
 
-        <Tabs defaultValue="subscriptions" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto">
-            <TabsTrigger value="subscriptions">Active Subscriptions</TabsTrigger>
-            <TabsTrigger value="packages">Browse Packages</TabsTrigger>
-            <TabsTrigger value="products">Digital Products</TabsTrigger>
-            <TabsTrigger value="orders">Order History</TabsTrigger>
+        <Tabs defaultValue="subscriptions" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:w-auto gap-1 h-auto">
+            <TabsTrigger value="subscriptions" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Active </span>Subscriptions
+            </TabsTrigger>
+            <TabsTrigger value="packages" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Browse </span>Packages
+            </TabsTrigger>
+            <TabsTrigger value="products" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Digital </span>Products
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Order </span>History
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="subscriptions" className="space-y-4">
             {subscriptions && subscriptions.length > 0 ? (
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 {subscriptions.map((sub) => (
                   <Card key={sub.id} className="p-6 border-primary/20">
                     <div className="flex items-start justify-between mb-4">
@@ -220,7 +228,7 @@ const Dashboard = () => {
 
           <TabsContent value="packages" className="space-y-4">
             {availablePackages && availablePackages.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {availablePackages.map((pkg) => (
                   <Card key={pkg.id} className="border-primary/20">
                     <CardHeader>
@@ -262,7 +270,7 @@ const Dashboard = () => {
 
           <TabsContent value="products" className="space-y-4">
             {digitalProducts && digitalProducts.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {digitalProducts.map((product) => (
                   <Card key={product.id} className="border-primary/20">
                     <CardHeader>

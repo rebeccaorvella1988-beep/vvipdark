@@ -76,31 +76,32 @@ const AdminLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
-      <aside className="w-64 border-r border-border bg-card/50 p-6">
-        <h1 className="text-2xl font-bold mb-8 bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+    <div className="min-h-screen bg-background flex flex-col md:flex-row">
+      <aside className="w-full md:w-64 border-b md:border-r md:border-b-0 border-border bg-card/50 p-4 md:p-6">
+        <h1 className="text-xl md:text-2xl font-bold mb-4 md:mb-8 bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
           Admin Panel
         </h1>
 
-        <nav className="space-y-2">
+        <nav className="space-y-1 md:space-y-2 flex md:flex-col overflow-x-auto md:overflow-x-visible pb-2 md:pb-0">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             return (
-              <Link key={item.path} to={item.path}>
+              <Link key={item.path} to={item.path} className="flex-shrink-0 md:flex-shrink">
                 <Button
                   variant={isActive ? "secondary" : "ghost"}
-                  className="w-full justify-start"
+                  className="w-full justify-start text-xs md:text-sm whitespace-nowrap"
+                  size="sm"
                 >
-                  <Icon className="h-4 w-4 mr-2" />
-                  {item.label}
+                  <Icon className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">{item.label}</span>
                 </Button>
               </Link>
             );
           })}
         </nav>
 
-        <div className="mt-auto pt-8">
+        <div className="mt-4 md:mt-auto md:pt-8 hidden md:block">
           <Button variant="outline" className="w-full" onClick={handleSignOut}>
             Sign Out
           </Button>

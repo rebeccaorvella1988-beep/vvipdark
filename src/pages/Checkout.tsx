@@ -164,15 +164,15 @@ const Checkout = () => {
   if (!itemData) return null;
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4">
+    <div className="min-h-screen bg-background py-4 sm:py-8 md:py-12 px-3 sm:px-4">
       <div className="container mx-auto max-w-4xl">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4 sm:mb-6">
           ← Back
         </Button>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          <Card className="p-6 border-primary/20">
-            <h2 className="text-2xl font-bold mb-4">Order Summary</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+          <Card className="p-4 sm:p-6 border-primary/20">
+            <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Order Summary</h2>
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-muted-foreground">{itemType === "package" ? "Package" : "Product"}</p>
@@ -198,13 +198,13 @@ const Checkout = () => {
               )}
               <div className="pt-4 border-t border-border">
                 <p className="text-sm text-muted-foreground">Total Amount</p>
-                <p className="text-3xl font-bold text-primary">${itemData.price}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-primary">${itemData.price}</p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 border-primary/20">
-            <h2 className="text-2xl font-bold mb-4">Payment Method</h2>
+          <Card className="p-4 sm:p-6 border-primary/20">
+            <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Payment Method</h2>
 
             {!selectedCrypto && !selectedPaymentMethod ? (
               <div className="space-y-4">

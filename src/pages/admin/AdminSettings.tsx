@@ -88,13 +88,13 @@ const AdminSettings = () => {
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Site Settings</h1>
-        <p className="text-muted-foreground">Configure your website information</p>
+    <div className="p-4 sm:p-6 md:p-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Site Settings</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">Configure your website information</p>
       </div>
 
-      <Card className="p-6 border-primary/20 max-w-2xl">
+      <Card className="p-4 sm:p-6 border-primary/20 max-w-2xl">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="text-sm font-medium">Site Name</label>
