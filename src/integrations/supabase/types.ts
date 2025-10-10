@@ -234,7 +234,13 @@ export type Database = {
       }
       site_settings: {
         Row: {
+          applepay_number: string | null
+          cashapp_handle: string | null
+          chime_email: string | null
           id: string
+          mpesa_agent_name: string | null
+          mpesa_agent_number: string | null
+          paypal_email: string | null
           site_description: string | null
           site_logo: string | null
           site_name: string | null
@@ -243,10 +249,18 @@ export type Database = {
           telegram_link: string | null
           twitter_link: string | null
           updated_at: string
+          venmo_handle: string | null
           whatsapp_link: string | null
+          zelle_email: string | null
         }
         Insert: {
+          applepay_number?: string | null
+          cashapp_handle?: string | null
+          chime_email?: string | null
           id?: string
+          mpesa_agent_name?: string | null
+          mpesa_agent_number?: string | null
+          paypal_email?: string | null
           site_description?: string | null
           site_logo?: string | null
           site_name?: string | null
@@ -255,10 +269,18 @@ export type Database = {
           telegram_link?: string | null
           twitter_link?: string | null
           updated_at?: string
+          venmo_handle?: string | null
           whatsapp_link?: string | null
+          zelle_email?: string | null
         }
         Update: {
+          applepay_number?: string | null
+          cashapp_handle?: string | null
+          chime_email?: string | null
           id?: string
+          mpesa_agent_name?: string | null
+          mpesa_agent_number?: string | null
+          paypal_email?: string | null
           site_description?: string | null
           site_logo?: string | null
           site_name?: string | null
@@ -267,7 +289,9 @@ export type Database = {
           telegram_link?: string | null
           twitter_link?: string | null
           updated_at?: string
+          venmo_handle?: string | null
           whatsapp_link?: string | null
+          zelle_email?: string | null
         }
         Relationships: []
       }

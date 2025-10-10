@@ -16,6 +16,7 @@ const Checkout = () => {
   const productId = searchParams.get("product");
   const navigate = useNavigate();
   const [selectedCrypto, setSelectedCrypto] = useState("");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
   const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [transactionHash, setTransactionHash] = useState("");
   const [countdown, setCountdown] = useState(900); // 15 minutes
@@ -113,7 +114,7 @@ const Checkout = () => {
 
   const handleSubmitPayment = async () => {
     if (!transactionHash.trim()) {
-      toast.error("Please enter transaction hash");
+      toast.error("Please enter transaction/reference ID");
       return;
     }
 
@@ -121,7 +122,7 @@ const Checkout = () => {
       const orderPayload: any = {
         user_id: session.user.id,
         amount: itemData.price,
-        crypto_type: selectedCrypto,
+        crypto_type: selectedCrypto || selectedPaymentMethod,
         transaction_hash: transactionHash,
         status: "pending",
       };
@@ -205,28 +206,104 @@ const Checkout = () => {
           <Card className="p-6 border-primary/20">
             <h2 className="text-2xl font-bold mb-4">Payment Method</h2>
 
-            {!selectedCrypto ? (
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground mb-4">
-                  Select your preferred cryptocurrency
-                </p>
-                {cryptoWallets?.map((wallet) => (
-                  <Button
-                    key={wallet.id}
-                    variant="outline"
-                    className="w-full justify-start text-left h-auto py-4"
-                    onClick={() => setSelectedCrypto(wallet.crypto_type)}
-                  >
-                    <div>
-                      <p className="font-semibold">{wallet.crypto_type}</p>
-                      {wallet.network && (
-                        <p className="text-sm text-muted-foreground">{wallet.network}</p>
-                      )}
-                    </div>
-                  </Button>
-                ))}
+            {!selectedCrypto && !selectedPaymentMethod ? (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-medium mb-3">Cryptocurrency</p>
+                  <div className="space-y-2">
+                    {cryptoWallets?.map((wallet) => (
+                      <Button
+                        key={wallet.id}
+                        variant="outline"
+                        className="w-full justify-start text-left h-auto py-3"
+                        onClick={() => setSelectedCrypto(wallet.crypto_type)}
+                      >
+                        <div>
+                          <p className="font-semibold">{wallet.crypto_type}</p>
+                          {wallet.network && (
+                            <p className="text-sm text-muted-foreground">{wallet.network}</p>
+                          )}
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-border">
+                  <p className="text-sm font-medium mb-3">Alternative Payment Methods</p>
+                  <div className="space-y-2">
+                    {siteSettings?.mpesa_agent_number && (
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left h-auto py-3"
+                        onClick={() => setSelectedPaymentMethod("mpesa")}
+                      >
+                        <div>
+                          <p className="font-semibold">M-Pesa Agent</p>
+                          <p className="text-sm text-muted-foreground">
+                            {siteSettings.mpesa_agent_name}
+                          </p>
+                        </div>
+                      </Button>
+                    )}
+                    {siteSettings?.cashapp_handle && (
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left h-auto py-3"
+                        onClick={() => setSelectedPaymentMethod("cashapp")}
+                      >
+                        <p className="font-semibold">CashApp</p>
+                      </Button>
+                    )}
+                    {siteSettings?.venmo_handle && (
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left h-auto py-3"
+                        onClick={() => setSelectedPaymentMethod("venmo")}
+                      >
+                        <p className="font-semibold">Venmo</p>
+                      </Button>
+                    )}
+                    {siteSettings?.paypal_email && (
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left h-auto py-3"
+                        onClick={() => setSelectedPaymentMethod("paypal")}
+                      >
+                        <p className="font-semibold">PayPal</p>
+                      </Button>
+                    )}
+                    {siteSettings?.applepay_number && (
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left h-auto py-3"
+                        onClick={() => setSelectedPaymentMethod("applepay")}
+                      >
+                        <p className="font-semibold">Apple Pay</p>
+                      </Button>
+                    )}
+                    {siteSettings?.zelle_email && (
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left h-auto py-3"
+                        onClick={() => setSelectedPaymentMethod("zelle")}
+                      >
+                        <p className="font-semibold">Zelle</p>
+                      </Button>
+                    )}
+                    {siteSettings?.chime_email && (
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left h-auto py-3"
+                        onClick={() => setSelectedPaymentMethod("chime")}
+                      >
+                        <p className="font-semibold">Chime</p>
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </div>
-            ) : (
+            ) : selectedCrypto ? (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -269,6 +346,144 @@ const Checkout = () => {
                     value={transactionHash}
                     onChange={(e) => setTransactionHash(e.target.value)}
                     placeholder="Enter transaction hash after payment"
+                    className="mt-1"
+                  />
+                </div>
+
+                <Button
+                  className="w-full bg-gradient-to-r from-accent to-accent/80"
+                  onClick={handleSubmitPayment}
+                  disabled={!transactionHash.trim()}
+                >
+                  I Have Paid
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    const telegramLink = (packageData?.telegram_link || siteSettings?.telegram_link);
+                    if (telegramLink) window.open(telegramLink, "_blank");
+                  }}
+                  disabled={!packageData?.telegram_link && !siteSettings?.telegram_link}
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Telegram Support
+                </Button>
+
+                <p className="text-xs text-center text-muted-foreground">
+                  After submission, admin will verify your payment and activate your subscription.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold">
+                      {selectedPaymentMethod === "mpesa" && "M-Pesa Agent"}
+                      {selectedPaymentMethod === "cashapp" && "CashApp"}
+                      {selectedPaymentMethod === "venmo" && "Venmo"}
+                      {selectedPaymentMethod === "paypal" && "PayPal"}
+                      {selectedPaymentMethod === "applepay" && "Apple Pay"}
+                      {selectedPaymentMethod === "zelle" && "Zelle"}
+                      {selectedPaymentMethod === "chime" && "Chime"}
+                    </p>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedPaymentMethod("")}>
+                    Change
+                  </Button>
+                </div>
+
+                <div className="p-4 bg-muted rounded-lg space-y-3">
+                  {selectedPaymentMethod === "mpesa" && (
+                    <>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Agent Name</p>
+                        <p className="font-semibold">{siteSettings?.mpesa_agent_name}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Agent Number</p>
+                        <p className="font-mono font-semibold">{siteSettings?.mpesa_agent_number}</p>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Send ${itemData.price} to the agent number above
+                      </p>
+                    </>
+                  )}
+                  {selectedPaymentMethod === "cashapp" && (
+                    <>
+                      <div>
+                        <p className="text-sm text-muted-foreground">CashApp Handle</p>
+                        <p className="font-mono font-semibold">{siteSettings?.cashapp_handle}</p>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Send ${itemData.price} to this handle
+                      </p>
+                    </>
+                  )}
+                  {selectedPaymentMethod === "venmo" && (
+                    <>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Venmo Handle</p>
+                        <p className="font-mono font-semibold">{siteSettings?.venmo_handle}</p>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Send ${itemData.price} to this handle
+                      </p>
+                    </>
+                  )}
+                  {selectedPaymentMethod === "paypal" && (
+                    <>
+                      <div>
+                        <p className="text-sm text-muted-foreground">PayPal Email</p>
+                        <p className="font-mono font-semibold">{siteSettings?.paypal_email}</p>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Send ${itemData.price} to this email
+                      </p>
+                    </>
+                  )}
+                  {selectedPaymentMethod === "applepay" && (
+                    <>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Apple Pay Number</p>
+                        <p className="font-mono font-semibold">{siteSettings?.applepay_number}</p>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Send ${itemData.price} to this number
+                      </p>
+                    </>
+                  )}
+                  {selectedPaymentMethod === "zelle" && (
+                    <>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Zelle Email</p>
+                        <p className="font-mono font-semibold">{siteSettings?.zelle_email}</p>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Send ${itemData.price} to this email
+                      </p>
+                    </>
+                  )}
+                  {selectedPaymentMethod === "chime" && (
+                    <>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Chime Email</p>
+                        <p className="font-mono font-semibold">{siteSettings?.chime_email}</p>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Send ${itemData.price} to this email
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                <div>
+                  <Label>Transaction/Reference ID</Label>
+                  <Input
+                    value={transactionHash}
+                    onChange={(e) => setTransactionHash(e.target.value)}
+                    placeholder="Enter transaction/reference ID after payment"
                     className="mt-1"
                   />
                 </div>

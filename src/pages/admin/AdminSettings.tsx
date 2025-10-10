@@ -18,6 +18,14 @@ const AdminSettings = () => {
     telegram_link: "",
     whatsapp_link: "",
     twitter_link: "",
+    mpesa_agent_number: "",
+    mpesa_agent_name: "",
+    cashapp_handle: "",
+    venmo_handle: "",
+    paypal_email: "",
+    applepay_number: "",
+    zelle_email: "",
+    chime_email: "",
   });
 
   const { data: settings } = useQuery({
@@ -43,6 +51,14 @@ const AdminSettings = () => {
         telegram_link: settings.telegram_link || "",
         whatsapp_link: settings.whatsapp_link || "",
         twitter_link: settings.twitter_link || "",
+        mpesa_agent_number: settings.mpesa_agent_number || "",
+        mpesa_agent_name: settings.mpesa_agent_name || "",
+        cashapp_handle: settings.cashapp_handle || "",
+        venmo_handle: settings.venmo_handle || "",
+        paypal_email: settings.paypal_email || "",
+        applepay_number: settings.applepay_number || "",
+        zelle_email: settings.zelle_email || "",
+        chime_email: settings.chime_email || "",
       });
     }
   }, [settings]);
@@ -155,6 +171,82 @@ const AdminSettings = () => {
                   value={formData.twitter_link}
                   onChange={(e) => setFormData({ ...formData, twitter_link: e.target.value })}
                   placeholder="https://twitter.com/..."
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-border">
+            <h3 className="font-semibold mb-4">Alternative Payment Methods</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Configure payment options for clients who prefer agent-based or non-crypto payments
+            </p>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">M-Pesa Agent Number</label>
+                <Input
+                  value={formData.mpesa_agent_number}
+                  onChange={(e) => setFormData({ ...formData, mpesa_agent_number: e.target.value })}
+                  placeholder="+254..."
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">M-Pesa Agent Name</label>
+                <Input
+                  value={formData.mpesa_agent_name}
+                  onChange={(e) => setFormData({ ...formData, mpesa_agent_name: e.target.value })}
+                  placeholder="Agent Name"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">CashApp Handle</label>
+                <Input
+                  value={formData.cashapp_handle}
+                  onChange={(e) => setFormData({ ...formData, cashapp_handle: e.target.value })}
+                  placeholder="$handle"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Venmo Handle</label>
+                <Input
+                  value={formData.venmo_handle}
+                  onChange={(e) => setFormData({ ...formData, venmo_handle: e.target.value })}
+                  placeholder="@handle"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">PayPal Email</label>
+                <Input
+                  type="email"
+                  value={formData.paypal_email}
+                  onChange={(e) => setFormData({ ...formData, paypal_email: e.target.value })}
+                  placeholder="email@example.com"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Apple Pay Number</label>
+                <Input
+                  value={formData.applepay_number}
+                  onChange={(e) => setFormData({ ...formData, applepay_number: e.target.value })}
+                  placeholder="+1..."
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Zelle Email</label>
+                <Input
+                  type="email"
+                  value={formData.zelle_email}
+                  onChange={(e) => setFormData({ ...formData, zelle_email: e.target.value })}
+                  placeholder="email@example.com"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Chime Email</label>
+                <Input
+                  type="email"
+                  value={formData.chime_email}
+                  onChange={(e) => setFormData({ ...formData, chime_email: e.target.value })}
+                  placeholder="email@example.com"
                 />
               </div>
             </div>
