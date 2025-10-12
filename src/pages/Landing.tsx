@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { TrendingUp, Zap, Shield, Users } from "lucide-react";
+import { TrendingUp, Zap, Shield, Users, Gift } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,6 +58,19 @@ const Landing = () => {
     },
   });
 
+  const { data: freeContent } = useQuery({
+    queryKey: ["free-content"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("free_content")
+        .select("*")
+        .eq("is_active", true)
+        .order("type", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navbar */}
@@ -110,6 +123,53 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      {/* Free Content */}
+      {freeContent && freeContent.length > 0 && (
+        <section className="py-12 sm:py-20 px-3 sm:px-4">
+          <div className="container mx-auto">
+            <h2 className="text-2xl sm:text-4xl font-bold text-center mb-8 sm:mb-12">
+              Get Started with <span className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">Free Content</span>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
+              {freeContent.map((content) => (
+                <Card
+                  key={content.id}
+                  className="p-6 sm:p-8 border-primary/30 hover:border-primary hover:shadow-glow transition-all bg-gradient-to-br from-card to-card/50"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    {content.type === 'sports_betting' ? (
+                      <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
+                        <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+                      </div>
+                    ) : (
+                      <div className="p-3 rounded-xl bg-accent/10 border border-accent/20">
+                        <Gift className="h-6 w-6 sm:h-8 sm:w-8 text-accent" />
+                      </div>
+                    )}
+                    <div className="px-3 py-1 rounded-full bg-primary/20 border border-primary/30">
+                      <span className="text-xs sm:text-sm font-semibold text-primary">FREE</span>
+                    </div>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-bold mb-3">{content.title}</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground mb-6 leading-relaxed">
+                    {content.content}
+                  </p>
+                  <Button 
+                    className="w-full bg-gradient-to-r from-primary to-primary-glow hover:opacity-90"
+                    size="lg"
+                    asChild
+                  >
+                    <Link to="/auth?mode=signup">
+                      Access Now
+                    </Link>
+                  </Button>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Features */}
       <section className="py-12 sm:py-20 px-3 sm:px-4 bg-card/50">

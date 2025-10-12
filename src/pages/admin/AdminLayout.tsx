@@ -12,6 +12,7 @@ import {
   FileText,
   Settings,
   MessageSquare,
+  Gift,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -55,6 +56,7 @@ const AdminLayout = () => {
 
   const navItems = [
     { path: "/admin", icon: LayoutDashboard, label: "Dashboard" },
+    { path: "/admin/free-content", icon: Gift, label: "Free Content" },
     { path: "/admin/packages", icon: Package, label: "Packages" },
     { path: "/admin/categories", icon: FolderTree, label: "Categories" },
     { path: "/admin/wallets", icon: Wallet, label: "Crypto Wallets" },
