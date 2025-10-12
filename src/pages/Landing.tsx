@@ -152,9 +152,74 @@ const Landing = () => {
                     </div>
                   </div>
                   <h3 className="text-xl sm:text-2xl font-bold mb-3">{content.title}</h3>
-                  <p className="text-sm sm:text-base text-muted-foreground mb-6 leading-relaxed">
+                  <p className="text-sm sm:text-base text-muted-foreground mb-4 leading-relaxed">
                     {content.content}
                   </p>
+
+                  {/* Signals structured data */}
+                  {content.type === "signals" && (content.market_type || content.action || content.price) && (
+                    <div className="mb-6 p-4 rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20">
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        {content.market_type && (
+                          <div className="flex flex-col">
+                            <span className="text-muted-foreground text-xs mb-1">Market</span>
+                            <span className="font-semibold">{content.market_type}</span>
+                          </div>
+                        )}
+                        {content.action && (
+                          <div className="flex flex-col">
+                            <span className="text-muted-foreground text-xs mb-1">Action</span>
+                            <span className={`font-bold capitalize ${content.action === 'buy' ? 'text-green-600' : 'text-red-600'}`}>
+                              {content.action}
+                            </span>
+                          </div>
+                        )}
+                        {content.price && (
+                          <div className="flex flex-col">
+                            <span className="text-muted-foreground text-xs mb-1">Entry Price</span>
+                            <span className="font-semibold">{content.price}</span>
+                          </div>
+                        )}
+                        {content.take_profit && (
+                          <div className="flex flex-col">
+                            <span className="text-muted-foreground text-xs mb-1">Take Profit</span>
+                            <span className="font-bold text-green-600">🎯 {content.take_profit}</span>
+                          </div>
+                        )}
+                        {content.stop_loss && (
+                          <div className="flex flex-col">
+                            <span className="text-muted-foreground text-xs mb-1">Stop Loss</span>
+                            <span className="font-bold text-red-600">🛡️ {content.stop_loss}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Sports betting structured data */}
+                  {content.type === "sports_betting" && (content.sport_type || content.game_type || content.result) && (
+                    <div className="mb-6 p-4 rounded-lg bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 space-y-3">
+                      {content.sport_type && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground font-medium">Sport:</span>
+                          <span className="font-semibold">{content.sport_type}</span>
+                        </div>
+                      )}
+                      {content.game_type && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground font-medium">League:</span>
+                          <span className="font-semibold">{content.game_type}</span>
+                        </div>
+                      )}
+                      {content.result && (
+                        <div className="flex flex-col gap-1 text-sm">
+                          <span className="text-muted-foreground font-medium">Prediction:</span>
+                          <span className="font-bold text-lg">{content.result}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
                   <Button 
                     className="w-full bg-gradient-to-r from-primary to-primary-glow hover:opacity-90"
                     size="lg"

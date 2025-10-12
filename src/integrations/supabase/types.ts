@@ -97,28 +97,52 @@ export type Database = {
       }
       free_content: {
         Row: {
+          action: string | null
           content: string
           created_at: string
+          game_type: string | null
           id: string
           is_active: boolean | null
+          market_type: string | null
+          price: number | null
+          result: string | null
+          sport_type: string | null
+          stop_loss: number | null
+          take_profit: number | null
           title: string
           type: string
           updated_at: string
         }
         Insert: {
+          action?: string | null
           content: string
           created_at?: string
+          game_type?: string | null
           id?: string
           is_active?: boolean | null
+          market_type?: string | null
+          price?: number | null
+          result?: string | null
+          sport_type?: string | null
+          stop_loss?: number | null
+          take_profit?: number | null
           title: string
           type: string
           updated_at?: string
         }
         Update: {
+          action?: string | null
           content?: string
           created_at?: string
+          game_type?: string | null
           id?: string
           is_active?: boolean | null
+          market_type?: string | null
+          price?: number | null
+          result?: string | null
+          sport_type?: string | null
+          stop_loss?: number | null
+          take_profit?: number | null
           title?: string
           type?: string
           updated_at?: string
