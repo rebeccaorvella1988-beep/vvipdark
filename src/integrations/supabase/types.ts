@@ -288,13 +288,23 @@ export type Database = {
       }
       site_settings: {
         Row: {
+          applepay_enabled: boolean | null
           applepay_number: string | null
+          cashapp_enabled: boolean | null
           cashapp_handle: string | null
           chime_email: string | null
+          chime_enabled: boolean | null
           id: string
           mpesa_agent_name: string | null
           mpesa_agent_number: string | null
+          mpesa_consumer_key: string | null
+          mpesa_consumer_secret: string | null
+          mpesa_enabled: boolean | null
+          mpesa_environment: string | null
+          mpesa_passkey: string | null
+          mpesa_paybill: string | null
           paypal_email: string | null
+          paypal_enabled: boolean | null
           site_description: string | null
           site_logo: string | null
           site_name: string | null
@@ -303,18 +313,30 @@ export type Database = {
           telegram_link: string | null
           twitter_link: string | null
           updated_at: string
+          venmo_enabled: boolean | null
           venmo_handle: string | null
           whatsapp_link: string | null
           zelle_email: string | null
+          zelle_enabled: boolean | null
         }
         Insert: {
+          applepay_enabled?: boolean | null
           applepay_number?: string | null
+          cashapp_enabled?: boolean | null
           cashapp_handle?: string | null
           chime_email?: string | null
+          chime_enabled?: boolean | null
           id?: string
           mpesa_agent_name?: string | null
           mpesa_agent_number?: string | null
+          mpesa_consumer_key?: string | null
+          mpesa_consumer_secret?: string | null
+          mpesa_enabled?: boolean | null
+          mpesa_environment?: string | null
+          mpesa_passkey?: string | null
+          mpesa_paybill?: string | null
           paypal_email?: string | null
+          paypal_enabled?: boolean | null
           site_description?: string | null
           site_logo?: string | null
           site_name?: string | null
@@ -323,18 +345,30 @@ export type Database = {
           telegram_link?: string | null
           twitter_link?: string | null
           updated_at?: string
+          venmo_enabled?: boolean | null
           venmo_handle?: string | null
           whatsapp_link?: string | null
           zelle_email?: string | null
+          zelle_enabled?: boolean | null
         }
         Update: {
+          applepay_enabled?: boolean | null
           applepay_number?: string | null
+          cashapp_enabled?: boolean | null
           cashapp_handle?: string | null
           chime_email?: string | null
+          chime_enabled?: boolean | null
           id?: string
           mpesa_agent_name?: string | null
           mpesa_agent_number?: string | null
+          mpesa_consumer_key?: string | null
+          mpesa_consumer_secret?: string | null
+          mpesa_enabled?: boolean | null
+          mpesa_environment?: string | null
+          mpesa_passkey?: string | null
+          mpesa_paybill?: string | null
           paypal_email?: string | null
+          paypal_enabled?: boolean | null
           site_description?: string | null
           site_logo?: string | null
           site_name?: string | null
@@ -343,9 +377,11 @@ export type Database = {
           telegram_link?: string | null
           twitter_link?: string | null
           updated_at?: string
+          venmo_enabled?: boolean | null
           venmo_handle?: string | null
           whatsapp_link?: string | null
           zelle_email?: string | null
+          zelle_enabled?: boolean | null
         }
         Relationships: []
       }
