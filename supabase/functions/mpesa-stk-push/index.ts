@@ -65,6 +65,9 @@ serve(async (req) => {
 
     // Step 1: Get OAuth token
     const authString = btoa(`${mpesa_consumer_key}:${mpesa_consumer_secret}`);
+    console.log("Requesting OAuth token from:", `${baseUrl}/oauth/v1/generate`);
+    console.log("Environment:", mpesa_environment);
+    
     const tokenResponse = await fetch(
       `${baseUrl}/oauth/v1/generate?grant_type=client_credentials`,
       {
@@ -77,9 +80,20 @@ serve(async (req) => {
 
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
-      console.error("OAuth token error:", errorText);
+      console.error("OAuth token error - Status:", tokenResponse.status);
+      console.error("OAuth token error - Response:", errorText);
+      
+      let userMessage = "Failed to authenticate with M-Pesa. ";
+      if (tokenResponse.status === 400) {
+        userMessage += "Invalid credentials. Please check your Consumer Key and Consumer Secret in Admin Settings.";
+      } else if (tokenResponse.status === 401) {
+        userMessage += "Unauthorized. Your M-Pesa API credentials may be incorrect or expired.";
+      } else {
+        userMessage += `Error code: ${tokenResponse.status}`;
+      }
+      
       return new Response(
-        JSON.stringify({ success: false, error: "Failed to authenticate with M-Pesa" }),
+        JSON.stringify({ success: false, error: userMessage }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
