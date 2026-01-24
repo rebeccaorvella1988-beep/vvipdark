@@ -6,13 +6,17 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
-import { Copy, Check, Clock, MessageCircle, Smartphone, Wallet } from "lucide-react";
+import { Copy, Check, Clock, MessageCircle, Smartphone, Wallet, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import QRCode from "qrcode";
 import MpesaPayment from "@/components/checkout/MpesaPayment";
 
 type PaymentCategory = "" | "crypto" | "mpesa" | "alternative";
 type AlternativeMethod = "cashapp" | "venmo" | "paypal" | "applepay" | "zelle" | "chime";
+type Currency = "USD" | "KES";
+
+// Exchange rate (USD to KES) - In production, fetch this from an API
+const USD_TO_KES_RATE = 130;
 
 const Checkout = () => {
   const [searchParams] = useSearchParams();
@@ -28,6 +32,9 @@ const Checkout = () => {
   const [copied, setCopied] = useState(false);
   const [session, setSession] = useState<any>(null);
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  const [currency, setCurrency] = useState<Currency>("USD");
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -103,6 +110,12 @@ const Checkout = () => {
 
   const selectedWallet = cryptoWallets?.find((w) => w.crypto_type === selectedCrypto);
 
+  // Calculate prices based on currency
+  const priceInUSD = itemData?.price || 0;
+  const priceInKES = Math.ceil(priceInUSD * USD_TO_KES_RATE);
+  const displayPrice = currency === "USD" ? priceInUSD : priceInKES;
+  const currencySymbol = currency === "USD" ? "$" : "KES ";
+
   useEffect(() => {
     if (selectedWallet) {
       QRCode.toDataURL(selectedWallet.wallet_address).then(setQrCodeUrl);
@@ -113,39 +126,56 @@ const Checkout = () => {
   const createPendingOrder = async () => {
     if (!session?.user?.id || !itemData) return null;
     
-    const orderPayload: any = {
-      user_id: session.user.id,
-      amount: itemData.price,
-      crypto_type: "mpesa",
-      status: "pending",
-    };
-
-    if (itemType === "package") {
-      orderPayload.package_id = packageId;
-    } else {
-      orderPayload.digital_product_id = productId;
-    }
-
-    const { data, error } = await supabase
-      .from("orders")
-      .insert(orderPayload)
-      .select()
-      .single();
-
-    if (error) {
-      toast.error("Failed to create order");
-      return null;
-    }
+    setIsCreatingOrder(true);
     
-    return data.id;
+    try {
+      const orderPayload: any = {
+        user_id: session.user.id,
+        amount: priceInKES, // M-Pesa uses KES
+        crypto_type: "mpesa",
+        status: "pending",
+      };
+
+      if (itemType === "package") {
+        orderPayload.package_id = packageId;
+      } else {
+        orderPayload.digital_product_id = productId;
+      }
+
+      const { data, error } = await supabase
+        .from("orders")
+        .insert(orderPayload)
+        .select()
+        .single();
+
+      if (error) {
+        toast.error("Failed to create order");
+        return null;
+      }
+      
+      return data.id;
+    } finally {
+      setIsCreatingOrder(false);
+    }
   };
 
   const handleMpesaSelect = async () => {
+    setCurrency("KES");
     const orderId = await createPendingOrder();
     if (orderId) {
       setPendingOrderId(orderId);
       setPaymentCategory("mpesa");
     }
+  };
+
+  const handleCryptoSelect = () => {
+    setCurrency("USD");
+    setPaymentCategory("crypto");
+  };
+
+  const handleAlternativeSelect = () => {
+    setCurrency("USD");
+    setPaymentCategory("alternative");
   };
 
   const handleCopy = () => {
@@ -162,6 +192,8 @@ const Checkout = () => {
       toast.error("Please enter transaction/reference ID");
       return;
     }
+
+    setIsSubmitting(true);
 
     try {
       const orderPayload: any = {
@@ -196,6 +228,8 @@ const Checkout = () => {
       navigate("/dashboard");
     } catch (error: any) {
       toast.error(error.message || "Failed to submit payment");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -212,6 +246,7 @@ const Checkout = () => {
     setPendingOrderId(null);
     setTransactionHash("");
     setCountdown(900);
+    setCurrency("USD");
   };
 
   // Check which alternative methods are available and enabled
@@ -224,7 +259,31 @@ const Checkout = () => {
     { key: "chime" as const, label: "Chime", value: siteSettings?.chime_enabled && siteSettings?.chime_email ? siteSettings.chime_email : null },
   ].filter((m): m is { key: AlternativeMethod; label: string; value: string } => m.value !== null);
 
-  if (!itemData) return null;
+  // Loading spinner component
+  const LoadingSpinner = ({ size = "md" }: { size?: "sm" | "md" | "lg" }) => {
+    const sizeClasses = {
+      sm: "w-4 h-4",
+      md: "w-6 h-6",
+      lg: "w-10 h-10",
+    };
+    return (
+      <div className="relative">
+        <div className={`${sizeClasses[size]} rounded-full border-2 border-primary/20`} />
+        <div 
+          className={`absolute inset-0 ${sizeClasses[size]} rounded-full border-2 border-transparent border-t-primary animate-spin`}
+          style={{ animationDuration: "0.8s" }}
+        />
+      </div>
+    );
+  };
+
+  if (!itemData) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background py-4 sm:py-8 md:py-12 px-3 sm:px-4">
@@ -262,7 +321,19 @@ const Checkout = () => {
               )}
               <div className="pt-4 border-t border-border">
                 <p className="text-sm text-muted-foreground">Total Amount</p>
-                <p className="text-2xl sm:text-3xl font-bold text-primary">${itemData.price}</p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-2xl sm:text-3xl font-bold text-primary">
+                    {currencySymbol}{displayPrice.toLocaleString()}
+                  </p>
+                  {currency === "KES" && (
+                    <span className="text-sm text-muted-foreground">(${priceInUSD})</span>
+                  )}
+                </div>
+                {/* Currency indicator */}
+                <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
+                  <span className="text-xs text-muted-foreground">Paying in:</span>
+                  <span className="text-xs font-semibold text-primary">{currency}</span>
+                </div>
               </div>
             </div>
           </Card>
@@ -278,18 +349,21 @@ const Checkout = () => {
                 {cryptoWallets && cryptoWallets.length > 0 && (
                   <Button
                     variant="outline"
-                    className="w-full justify-start text-left h-auto py-4"
-                    onClick={() => setPaymentCategory("crypto")}
+                    className="w-full justify-start text-left h-auto py-4 hover:border-orange-500/50 transition-all"
+                    onClick={handleCryptoSelect}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 w-full">
                       <div className="p-2 rounded-lg bg-orange-500/10">
                         <Wallet className="h-5 w-5 text-orange-500" />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <p className="font-semibold">Pay with Cryptocurrency</p>
                         <p className="text-sm text-muted-foreground">
                           Bitcoin, USDT, and more
                         </p>
+                      </div>
+                      <div className="px-2 py-1 rounded bg-orange-500/10 text-orange-500 text-xs font-semibold">
+                        USD
                       </div>
                     </div>
                   </Button>
@@ -299,18 +373,26 @@ const Checkout = () => {
                 {siteSettings?.mpesa_enabled && (
                   <Button
                     variant="outline"
-                    className="w-full justify-start text-left h-auto py-4 border-green-500/30 hover:border-green-500/50"
+                    className="w-full justify-start text-left h-auto py-4 border-green-500/30 hover:border-green-500/50 transition-all"
                     onClick={handleMpesaSelect}
+                    disabled={isCreatingOrder}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 w-full">
                       <div className="p-2 rounded-lg bg-green-500/10">
-                        <Smartphone className="h-5 w-5 text-green-500" />
+                        {isCreatingOrder ? (
+                          <Loader2 className="h-5 w-5 text-green-500 animate-spin" />
+                        ) : (
+                          <Smartphone className="h-5 w-5 text-green-500" />
+                        )}
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <p className="font-semibold">M-Pesa Express</p>
                         <p className="text-sm text-muted-foreground">
                           Instant payment via STK Push
                         </p>
+                      </div>
+                      <div className="px-2 py-1 rounded bg-green-500/10 text-green-500 text-xs font-semibold">
+                        KES
                       </div>
                     </div>
                   </Button>
@@ -320,18 +402,21 @@ const Checkout = () => {
                 {availableAlternatives.length > 0 && (
                   <Button
                     variant="outline"
-                    className="w-full justify-start text-left h-auto py-4"
-                    onClick={() => setPaymentCategory("alternative")}
+                    className="w-full justify-start text-left h-auto py-4 hover:border-primary/50 transition-all"
+                    onClick={handleAlternativeSelect}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 w-full">
                       <div className="p-2 rounded-lg bg-primary/10">
                         <span className="text-lg">💳</span>
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <p className="font-semibold">Other Payment Methods</p>
                         <p className="text-sm text-muted-foreground">
                           CashApp, Venmo, PayPal, etc.
                         </p>
+                      </div>
+                      <div className="px-2 py-1 rounded bg-primary/10 text-primary text-xs font-semibold">
+                        USD
                       </div>
                     </div>
                   </Button>
@@ -345,13 +430,22 @@ const Checkout = () => {
                 <Button variant="ghost" size="sm" onClick={resetPayment} className="mb-2">
                   ← Back to payment methods
                 </Button>
+                
+                {/* USD Currency Badge */}
+                <div className="flex justify-center">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20">
+                    <span className="text-xs font-medium text-muted-foreground">Currency:</span>
+                    <span className="font-bold text-orange-400">USD (US Dollar)</span>
+                  </div>
+                </div>
+                
                 <p className="text-sm font-medium mb-3">Select Cryptocurrency</p>
                 <div className="space-y-2">
                   {cryptoWallets?.map((wallet) => (
                     <Button
                       key={wallet.id}
                       variant="outline"
-                      className="w-full justify-start text-left h-auto py-3"
+                      className="w-full justify-start text-left h-auto py-3 hover:border-orange-500/50 transition-all"
                       onClick={() => setSelectedCrypto(wallet.crypto_type)}
                     >
                       <div>
@@ -415,11 +509,18 @@ const Checkout = () => {
                 </div>
 
                 <Button
-                  className="w-full bg-gradient-to-r from-accent to-accent/80"
+                  className="w-full h-12 bg-gradient-to-r from-accent to-accent/80 font-semibold"
                   onClick={handleSubmitPayment}
-                  disabled={!transactionHash.trim()}
+                  disabled={!transactionHash.trim() || isSubmitting}
                 >
-                  I Have Paid
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    "I Have Paid"
+                  )}
                 </Button>
 
                 <Button
@@ -454,13 +555,22 @@ const Checkout = () => {
                 <Button variant="ghost" size="sm" onClick={resetPayment} className="mb-2">
                   ← Back to payment methods
                 </Button>
+                
+                {/* USD Currency Badge */}
+                <div className="flex justify-center">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+                    <span className="text-xs font-medium text-muted-foreground">Currency:</span>
+                    <span className="font-bold text-primary">USD (US Dollar)</span>
+                  </div>
+                </div>
+                
                 <p className="text-sm font-medium mb-3">Select Payment Method</p>
                 <div className="space-y-2">
                   {availableAlternatives.map((method) => (
                     <Button
                       key={method.key}
                       variant="outline"
-                      className="w-full justify-start text-left h-auto py-3"
+                      className="w-full justify-start text-left h-auto py-3 hover:border-primary/50 transition-all"
                       onClick={() => setSelectedAlternative(method.key)}
                     >
                       <p className="font-semibold">{method.label}</p>
@@ -512,11 +622,18 @@ const Checkout = () => {
                 </div>
 
                 <Button
-                  className="w-full bg-gradient-to-r from-accent to-accent/80"
+                  className="w-full h-12 bg-gradient-to-r from-accent to-accent/80 font-semibold"
                   onClick={handleSubmitPayment}
-                  disabled={!transactionHash.trim()}
+                  disabled={!transactionHash.trim() || isSubmitting}
                 >
-                  I Have Paid
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    "I Have Paid"
+                  )}
                 </Button>
 
                 <Button

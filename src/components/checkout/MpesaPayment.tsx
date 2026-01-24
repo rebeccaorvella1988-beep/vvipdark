@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Smartphone, Check, X, RefreshCw } from "lucide-react";
+import { Smartphone, Check, X, RefreshCw } from "lucide-react";
 
 interface MpesaPaymentProps {
   amount: number;
@@ -55,7 +55,7 @@ const MpesaPayment = ({ amount, orderId, itemName, onSuccess, onBack }: MpesaPay
           phone: formatPhoneNumber(phoneNumber),
           amount: amount,
           orderId: orderId,
-          accountReference: itemName.substring(0, 12).replace(/[^a-zA-Z0-9]/g, ""),
+          accountReference: itemName.substring(0, 12).replace(/[^a-zA-Z0-9]/g, "") || "Payment",
         },
       });
 
@@ -116,93 +116,192 @@ const MpesaPayment = ({ amount, orderId, itemName, onSuccess, onBack }: MpesaPay
     }
   }, [status, checkoutRequestId, pollCount]);
 
-  const getStatusIcon = () => {
+  // Custom spinning loader component
+  const SpinningLoader = ({ size = "lg" }: { size?: "sm" | "md" | "lg" }) => {
+    const sizeClasses = {
+      sm: "w-6 h-6",
+      md: "w-10 h-10",
+      lg: "w-16 h-16",
+    };
+    
+    return (
+      <div className="relative">
+        {/* Outer ring */}
+        <div className={`${sizeClasses[size]} rounded-full border-4 border-primary/20`} />
+        {/* Spinning arc */}
+        <div 
+          className={`absolute inset-0 ${sizeClasses[size]} rounded-full border-4 border-transparent border-t-green-500 border-r-green-500/50 animate-spin`}
+          style={{ animationDuration: "0.8s" }}
+        />
+        {/* Center dot */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className={`${size === "lg" ? "w-2 h-2" : "w-1.5 h-1.5"} rounded-full bg-green-500 animate-pulse`} />
+        </div>
+      </div>
+    );
+  };
+
+  const getStatusDisplay = () => {
     switch (status) {
       case "initiating":
-      case "checking":
-        return <Loader2 className="h-12 w-12 animate-spin text-primary" />;
+        return (
+          <div className="flex flex-col items-center gap-4">
+            <SpinningLoader size="lg" />
+            <div className="text-center">
+              <p className="font-semibold text-lg">Sending Request...</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Contacting M-Pesa servers
+              </p>
+            </div>
+          </div>
+        );
       case "waiting":
-        return <Smartphone className="h-12 w-12 text-warning animate-pulse" />;
+        return (
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative">
+              <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center animate-pulse">
+                <Smartphone className="h-10 w-10 text-green-500" />
+              </div>
+              {/* Ripple effect */}
+              <div className="absolute inset-0 rounded-full border-2 border-green-500/30 animate-ping" />
+            </div>
+            <div className="text-center">
+              <p className="font-semibold text-lg text-green-400">Check Your Phone</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Enter your M-Pesa PIN to complete payment
+              </p>
+            </div>
+            {/* Progress indicator */}
+            <div className="w-full max-w-xs">
+              <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                <span>Waiting for confirmation</span>
+                <span>{pollCount}/12</span>
+              </div>
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full transition-all duration-500"
+                  style={{ width: `${(pollCount / 12) * 100}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        );
+      case "checking":
+        return (
+          <div className="flex flex-col items-center gap-4">
+            <SpinningLoader size="lg" />
+            <div className="text-center">
+              <p className="font-semibold text-lg">Verifying Payment...</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Checking transaction status
+              </p>
+            </div>
+          </div>
+        );
       case "success":
         return (
-          <div className="h-12 w-12 rounded-full bg-green-500 flex items-center justify-center">
-            <Check className="h-6 w-6 text-white" />
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-20 h-20 rounded-full bg-green-500 flex items-center justify-center animate-bounce">
+              <Check className="h-10 w-10 text-white" />
+            </div>
+            <div className="text-center">
+              <p className="font-bold text-xl text-green-400">Payment Successful!</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Redirecting you to your dashboard...
+              </p>
+            </div>
           </div>
         );
       case "failed":
         return (
-          <div className="h-12 w-12 rounded-full bg-destructive flex items-center justify-center">
-            <X className="h-6 w-6 text-white" />
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-20 h-20 rounded-full bg-destructive/20 flex items-center justify-center">
+              <X className="h-10 w-10 text-destructive" />
+            </div>
+            <div className="text-center">
+              <p className="font-semibold text-lg text-destructive">{statusMessage}</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Please try again or use a different payment method
+              </p>
+            </div>
           </div>
         );
       default:
-        return <Smartphone className="h-12 w-12 text-primary" />;
+        return null;
     }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <p className="font-semibold text-lg">M-Pesa Express</p>
-          <p className="text-sm text-muted-foreground">Pay instantly with M-Pesa</p>
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-green-500/10">
+            <Smartphone className="h-5 w-5 text-green-500" />
+          </div>
+          <div>
+            <p className="font-semibold text-lg">M-Pesa Express</p>
+            <p className="text-sm text-muted-foreground">Pay instantly with M-Pesa</p>
+          </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={onBack} disabled={status === "initiating"}>
+        <Button variant="ghost" size="sm" onClick={onBack} disabled={status === "initiating" || status === "checking"}>
           Change
         </Button>
       </div>
 
+      {/* Currency Badge */}
+      <div className="flex justify-center">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20">
+          <span className="text-xs font-medium text-muted-foreground">Currency:</span>
+          <span className="font-bold text-green-400">KES (Kenyan Shilling)</span>
+        </div>
+      </div>
+
       {status === "idle" && (
         <>
-          <div className="p-4 bg-gradient-to-r from-green-500/10 to-green-600/10 border border-green-500/20 rounded-lg">
+          <div className="p-4 bg-gradient-to-r from-green-500/10 to-green-600/10 border border-green-500/20 rounded-xl">
             <p className="text-sm text-center">
               You will receive an M-Pesa prompt on your phone to complete payment of{" "}
-              <span className="font-bold text-green-600">KES {Math.ceil(amount)}</span>
+            </p>
+            <p className="text-2xl font-bold text-center text-green-400 mt-2">
+              KES {Math.ceil(amount).toLocaleString()}
             </p>
           </div>
 
           <div>
-            <Label htmlFor="phone">M-Pesa Phone Number</Label>
+            <Label htmlFor="phone" className="text-sm font-medium">M-Pesa Phone Number</Label>
             <Input
               id="phone"
               type="tel"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder="0712345678 or 254712345678"
-              className="mt-1 text-lg"
+              className="mt-1.5 text-lg h-12"
             />
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1.5">
               Enter the phone number registered with M-Pesa
             </p>
           </div>
 
           <Button
-            className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+            className="w-full h-12 text-base font-semibold bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-lg shadow-green-500/25"
             onClick={initiatePayment}
             disabled={!phoneNumber.trim()}
           >
-            <Smartphone className="h-4 w-4 mr-2" />
-            Pay KES {Math.ceil(amount)} with M-Pesa
+            <Smartphone className="h-5 w-5 mr-2" />
+            Pay KES {Math.ceil(amount).toLocaleString()} with M-Pesa
           </Button>
         </>
       )}
 
       {(status === "initiating" || status === "waiting" || status === "checking") && (
-        <div className="py-8 text-center space-y-4">
-          <div className="flex justify-center">{getStatusIcon()}</div>
-          <div>
-            <p className="font-semibold">{statusMessage}</p>
-            {status === "waiting" && (
-              <p className="text-sm text-muted-foreground mt-2">
-                Enter your M-Pesa PIN on your phone to complete payment
-              </p>
-            )}
-          </div>
+        <div className="py-10">
+          {getStatusDisplay()}
           
           {status === "waiting" && (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3 mt-8">
               <Button
                 variant="outline"
+                className="w-full"
                 onClick={checkPaymentStatus}
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
@@ -210,12 +309,13 @@ const MpesaPayment = ({ amount, orderId, itemName, onSuccess, onBack }: MpesaPay
               </Button>
               <Button
                 variant="ghost"
+                className="w-full"
                 onClick={() => {
                   setStatus("idle");
                   setPollCount(0);
                 }}
               >
-                Try Again
+                Try Again with Different Number
               </Button>
             </div>
           )}
@@ -223,36 +323,27 @@ const MpesaPayment = ({ amount, orderId, itemName, onSuccess, onBack }: MpesaPay
       )}
 
       {status === "success" && (
-        <div className="py-8 text-center space-y-4">
-          <div className="flex justify-center">{getStatusIcon()}</div>
-          <div>
-            <p className="font-semibold text-green-600">Payment Successful!</p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Redirecting you to your dashboard...
-            </p>
-          </div>
+        <div className="py-10">
+          {getStatusDisplay()}
         </div>
       )}
 
       {status === "failed" && (
-        <div className="py-8 text-center space-y-4">
-          <div className="flex justify-center">{getStatusIcon()}</div>
-          <div>
-            <p className="font-semibold text-destructive">{statusMessage}</p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Please try again or use a different payment method
-            </p>
+        <div className="py-10">
+          {getStatusDisplay()}
+          <div className="mt-6">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                setStatus("idle");
+                setPollCount(0);
+                setStatusMessage("");
+              }}
+            >
+              Try Again
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setStatus("idle");
-              setPollCount(0);
-              setStatusMessage("");
-            }}
-          >
-            Try Again
-          </Button>
         </div>
       )}
     </div>
