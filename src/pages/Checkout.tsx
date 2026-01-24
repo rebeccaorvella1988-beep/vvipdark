@@ -541,7 +541,7 @@ const Checkout = () => {
             {/* M-Pesa Payment */}
             {paymentCategory === "mpesa" && pendingOrderId && (
               <MpesaPayment
-                amount={itemData.price}
+                amount={priceInKES}
                 orderId={pendingOrderId}
                 itemName={itemData.name}
                 onSuccess={() => navigate("/dashboard")}
